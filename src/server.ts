@@ -17,27 +17,31 @@ const todoService = new Todo(db)
 app.use(express.json())
 
 app.get('/todos', async (req, res) => {
-    const allTodos = await todoService.findAll()
-    if (allTodos) res.status(200).send(allTodos)
-    res.status(500).send()
+    const response = await todoService.findAll()
+    const sendData = response.status === 200 ? response.data : response.message
+
+    res.status(response.status).send(sendData)
 })
 
 app.get('/todo/:id', async (req: Request<{ id: string }>, res) => {
-    const todo = await todoService.findOne(req.params.id)
-    if (todo) res.status(200).send(todo)
-    res.status(500).send()
+    const response = await todoService.findOne(req.params.id)
+    const sendData = response.status === 200 ? response.data : response.message
+
+    res.status(response.status).send(sendData)
 })
 
 app.post('/todo', async (req: Request<{}, {}, TTodoBody>, res) => {
-    const addedTodo = await todoService.create(req.body)
-    if (addedTodo) res.status(200).send(addedTodo)
-    res.status(500).send()
+    const response = await todoService.create(req.body)
+    const sendData = response.status === 200 ? response.data : response.message
+
+    res.status(response.status).send(sendData)
 })
 
 app.delete('/todo/:id', async (req: Request<{ id: string }>, res) => {
-    const removedTodo = await todoService.delete(req.params.id)
-    if (removedTodo) res.status(200).send(removedTodo)
-    res.status(500).send()
+    const response = await todoService.delete(req.params.id)
+    const sendData = response.status === 200 ? response.data : response.message
+
+    res.status(response.status).send(sendData)
 })
 
 app.listen(4000)
