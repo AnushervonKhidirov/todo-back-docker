@@ -1,47 +1,49 @@
+import 'dotenv/config'
+import 'reflect-metadata'
+
+import type { DataSource } from 'typeorm'
 import type { Request } from 'express'
-import type { TTodoBody } from './type/todo'
 
 import express from 'express'
-import 'dotenv/config'
 
-import DataBase from './service/data-base'
-import { Todo } from './service/todo'
+import { AppDataSource } from './db/data-source'
+import { TodoService } from './service/todo'
 
-const db = new DataBase()
+AppDataSource.initialize()
+    .then(dataSource => {
+        main(dataSource)
+    })
+    .catch(err => {
+        console.log(err)
+    })
 
-db.connect()
+function main(dataSource: DataSource) {
+    const app = express()
+    const todoService = new TodoService(dataSource)
 
-const app = express()
-const todoService = new Todo(db)
+    app.use(express.json())
 
-app.use(express.json())
+    app.get('/todos', async (req, res) => {
+        const response = await todoService.findAll()
+        res.status(200).send(response)
+    })
 
-app.get('/todos', async (req, res) => {
-    const response = await todoService.findAll()
-    const sendData = response.status === 200 ? response.data : response.message
+    app.get('/todo/:id', async (req: Request<{ id: string }>, res) => {
+        const todo = await todoService.findOne(req.params.id)
+        if (todo) res.status(200).send(todo)
+        res.status(400).send()
+    })
 
-    res.status(response.status).send(sendData)
-})
+    app.post('/todo', async (req: Request<{}, {}, { text: string }>, res) => {
+        const newTodo = await todoService.create(req.body)
+        res.status(200).send(newTodo)
+    })
 
-app.get('/todo/:id', async (req: Request<{ id: string }>, res) => {
-    const response = await todoService.findOne(req.params.id)
-    const sendData = response.status === 200 ? response.data : response.message
+    app.delete('/todo/:id', async (req: Request<{ id: string }>, res) => {
+        const todo = await todoService.delete(req.params.id)
+        if (todo) res.status(200).send()
+        res.status(400).send()
+    })
 
-    res.status(response.status).send(sendData)
-})
-
-app.post('/todo', async (req: Request<{}, {}, TTodoBody>, res) => {
-    const response = await todoService.create(req.body)
-    const sendData = response.status === 200 ? response.data : response.message
-
-    res.status(response.status).send(sendData)
-})
-
-app.delete('/todo/:id', async (req: Request<{ id: string }>, res) => {
-    const response = await todoService.delete(req.params.id)
-    const sendData = response.status === 200 ? response.data : response.message
-
-    res.status(response.status).send(sendData)
-})
-
-app.listen(4000)
+    app.listen(4000)
+}
