@@ -1,6 +1,7 @@
 export type TTodo = {
     id: string
-    name: string
+    text: string
+    created_at?: number
 }
 
-export type TTodoBody = Omit<TTodo, 'id'>
+export type TTodoBody = Omit<TTodo, 'id' | 'created_at'>

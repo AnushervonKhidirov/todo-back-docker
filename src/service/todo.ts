@@ -1,40 +1,40 @@
 import type { TTodo, TTodoBody } from '../type/todo'
 
-import { readFile, writeFile } from 'fs/promises'
-import { join } from 'path'
+import { format } from 'mysql2'
 import { v4 as uuid } from 'uuid'
 
-const todoJsonPath = 'db/todos.json'
+import DataBase from './data-base'
 
 export class Todo {
-    async findAll() {
-        const totoListJson = await readFile(join(process.cwd(), todoJsonPath), { encoding: 'utf-8' })
-        const todoList = JSON.parse(totoListJson) as TTodo[]
+    db: DataBase
 
-        return todoList
+    constructor(db: DataBase) {
+        this.db = db
+    }
+
+    async findAll() {
+        return await this.db.query('SELECT * FROM `todos`')
+    }
+
+    async findOne(id: string) {
+        const query = format('SELECT * FROM `todos` WHERE id = ?', [id])
+        const result = (await this.db.query(query)) as TTodo[] | null
+
+        return result ? result[0] : null
     }
 
     async create(todo: TTodoBody) {
-        const totoListJson = await readFile(join(process.cwd(), todoJsonPath), { encoding: 'utf-8' })
-        const todoList = JSON.parse(totoListJson) as TTodo[]
+        const newTodo = { id: uuid(), text: todo.text }
+        const query = format('INSERT INTO `todos` (id, text) VALUES (?, ?)', [newTodo.id, newTodo.text])
+        const result = await this.db.query(query)
 
-        const newTodo = { ...todo, id: uuid() }
-
-        todoList.push(newTodo)
-
-        await writeFile(join(process.cwd(), todoJsonPath), JSON.stringify(todoList), { encoding: 'utf-8' })
-
-        return newTodo
+        return result ? newTodo : null
     }
 
     async delete(id: string) {
-        const totoListJson = await readFile(join(process.cwd(), todoJsonPath), { encoding: 'utf-8' })
-        const todoList = JSON.parse(totoListJson) as TTodo[]
-        const removedTodo = todoList.find(todo => todo.id === id)
-        const newTodoList = todoList.filter(todo => todo.id !== id)
+        const query = format('DELETE FROM `todos` WHERE id = ?', [id])
+        const result = await this.db.query(query)
 
-        await writeFile(join(process.cwd(), todoJsonPath), JSON.stringify(newTodoList), { encoding: 'utf-8' })
-
-        return removedTodo
+        return result ? { id, message: 'Todo removed successfully' } : null
     }
 }
