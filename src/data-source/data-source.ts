@@ -1,7 +1,7 @@
 import type { DataSourceOptions } from 'typeorm'
 import { DataSource } from 'typeorm'
 
-import { Todo } from './entity/Todo'
+import { TodoEntity } from '../todo/entity/todo.entity'
 
 export const dataSourceOptions: DataSourceOptions = {
     type: 'mysql',
@@ -10,7 +10,7 @@ export const dataSourceOptions: DataSourceOptions = {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     synchronize: true,
-    entities: [Todo],
+    entities: [TodoEntity],
 }
 
 export const AppDataSource = new DataSource(dataSourceOptions)

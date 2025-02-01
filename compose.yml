@@ -2,6 +2,7 @@ services:
   node:
     build: .
     command: npm run dev
+    container_name: todo-node
     ports:
       - 3000:4000
     depends_on:
@@ -16,6 +17,7 @@ services:
   admin:
     image: phpmyadmin
     restart: always
+    container_name: todo-admin
     ports:
       - 8080:80
     depends_on:
@@ -26,6 +28,7 @@ services:
   db:
     image: mysql:lts
     restart: always
+    container_name: todo-db
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
       interval: 5s
