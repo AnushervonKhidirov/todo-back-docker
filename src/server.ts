@@ -4,6 +4,7 @@ import 'reflect-metadata'
 import type { DataSource } from 'typeorm'
 
 import express from 'express'
+import cors from 'cors'
 
 import { AppDataSource } from './data-source/data-source'
 import { TodoRouter } from './todo/todo.router'
@@ -22,6 +23,7 @@ function runServer(dataSource: DataSource) {
   const todoRouter = new TodoRouter(dataSource).init()
 
   app.use(express.json())
+  app.use(cors())
   app.use('/todos', todoRouter)
 
   app.listen(4000)
