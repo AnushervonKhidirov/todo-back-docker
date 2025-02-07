@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express'
 import type { DataSource } from 'typeorm'
 
-import { NotFound } from 'http-errors'
+import { NotFound, BadRequest } from 'http-errors'
 
 import { TodoService } from './todo.service'
 
@@ -19,7 +19,7 @@ export class TodoController {
 
     if (!response) {
       const exception = NotFound()
-      res.status(exception.status).send(exception)
+      return res.status(exception.status).send(exception)
     }
 
     res.status(200).send(response)
@@ -32,7 +32,24 @@ export class TodoController {
 
   async create(req: Request<{}, {}, CreateTodoDto>, res: Response) {
     const createTodoDto = req.body
+
+    if (typeof createTodoDto.text === 'string' && createTodoDto.text.trim() === '') {
+      const exception = BadRequest("'text' field should not be empty")
+      return res.status(exception.status).send(exception)
+    }
+
+    if (!createTodoDto.text) {
+      const exception = BadRequest("'text' field is required")
+      return res.status(exception.status).send(exception)
+    }
+
     const todo = await this.todoService.create(createTodoDto)
+
+    if (!todo) {
+      const exception = BadRequest()
+      return res.status(exception.status).send(exception)
+    }
+
     res.status(200).send(todo)
   }
 
@@ -41,7 +58,7 @@ export class TodoController {
 
     if (!todo) {
       const exception = NotFound()
-      res.status(exception.status).send(exception)
+      return res.status(exception.status).send(exception)
     }
 
     res.status(200).send()
